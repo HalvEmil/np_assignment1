@@ -1,0 +1,1 @@
+Detta är en textfil för att se om kloningen av git repot har gått rätt till!
