@@ -44,10 +44,24 @@ printf("Host %s, and port %d.\n",Desthost,port);
   memset(&hints, 0, sizeof (hints));
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
-  getaddrinfo(Desthost, Destport, &hints, &res);
-  sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  connect(sockfd, res->ai_addr, res->ai_addrlen);
 
+
+  int status = getaddrinfo(Desthost, Destport, &hints, &res);
+  if(status != 0){
+    fprintf(stderr, "ERROR: RESOLVE ISSUE (%s)\n", gai_strerror(status));
+    exit(1);
+  }
+
+  printf("Första print\n");
+
+  sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+  
+  if(connect(sockfd, res->ai_addr, res->ai_addrlen) == -1){
+    perror("ERROR: CANT CONNECT");
+    exit(1);
+  }
+
+  printf("Andra print\n");
   fromlen = sizeof addr;
 
   int i1;
@@ -135,14 +149,5 @@ printf("Host %s, and port %d.\n",Desthost,port);
       
     }  
   }
-  // buf[byte_count] = '\0';
-  // if(command[0] == 'f'){
-  //   printf("ASSIGNMENT: %s %8.8g %8.8g\n", command, f1, f2);
-  //   printf("%s my result=(%8.8g)", buf, fresult);
-  // }
-  // else{
-  //   printf("ASSIGNMENT: %s %d %d\n", command, i1, i2);
-  //   printf("%s my result=(%d)\n", buf, iresult);
-  // }
    
 }
