@@ -5,7 +5,7 @@
 
 // Enable if you want debugging to be printed, see examble below.
 // Alternative, pass CFLAGS=-DDEBUG to make, make CFLAGS=-DDEBUG
-#define DEBUG
+//#define DEBUG
 
 
 // Included to get the support library
@@ -29,8 +29,9 @@ int main(int argc, char *argv[]){
 
   /* Do magic */
   int port=atoi(Destport);
-#ifdef DEBUG 
-  printf("Host %s, and port %d.\n",Desthost,port);
+printf("Host %s, and port %d.\n",Desthost,port);
+#ifdef DEBUG
+  printf("Connected to  %s, local %d\n", Desthost, port);
 #endif
   struct addrinfo hints, *res;
   int sockfd;
@@ -57,20 +58,21 @@ int main(int argc, char *argv[]){
   double fresult = NULL;
   char command[10];
   int rv;
+  char outbuf[64];
 
   while (1){
     byte_count = recv(sockfd, buf, sizeof(buf) - 1, 0 );
-    buf[byte_count] = '\0';
     if(byte_count <= 0){
       break;
     }
-    printf("Recieved: %s", buf);
+    buf[byte_count] = '\0';
+
     if( strncmp( buf , "TEXT TCP 1.0", 12) == 0){
       send(sockfd, "OK\n", 3, 0);
     }
     
-    rv = sscanf(buf ,"%s ", command);
-    if(command[0] == 'f'){
+    //rv = sscanf(buf ,"%s ", command);
+    if(buf[0]== 'f'){
       rv = sscanf(buf ,"%s %lf %lf", command, &f1, &f2);
       if(strcmp(command, "fadd") == 0){
       fresult = f1 + f2;
@@ -85,16 +87,34 @@ int main(int argc, char *argv[]){
       fresult = f1 / f2;
       }
 
-      printf("fresult = %8.8g\n", fresult);
-
-      char outbuf[64];
-      snprintf(outbuf, sizeof(outbuf), "%1f\n", fresult);
+      //char outbuf[64];
+      snprintf(outbuf, sizeof(outbuf), "%8.8g\n", fresult);
       if(fresult != NULL){
+
         send(sockfd, outbuf, strlen(outbuf), 0);
       }
     }
+    else if(strncmp(buf, "OK", 2) == 0){
+      buf[2] = '\0';
+      if(command[0] == 'f'){
+        printf("ASSIGNMENT: %s %8.8g %8.8g\n", command, f1, f2);
+        #ifdef DEBUG
+          printf("Calculated the result to %8.8g\n", fresult);
+        #endif
+        printf("%s my result=(%8.8g)\n", buf, fresult);
+      }
+      else{
+        printf("ASSIGNMENT: %s %d %d\n", command, i1, i2);
+                #ifdef DEBUG
+          printf("Calculated the result to %d\n", iresult);
+        #endif
+        printf("%s my result=(%d)\n", buf, iresult);
+       }
+       break;
+          
+    }
     else{
-      rv = sscanf(buf ,"%s %d %d", command, &i1, &i2);    
+      rv = sscanf(buf ,"%s %d %d", command, &i1, &i2);
       if(strcmp(command, "add") == 0){
         iresult = i1 + i2;
       }
@@ -107,13 +127,22 @@ int main(int argc, char *argv[]){
       if(strcmp(command, "div") == 0){
         iresult = i1 / i2;
       }
-      char outbuf[8];
+      //char outbuf[8];
       snprintf(outbuf, sizeof(outbuf), "%d\n", iresult);
-      if(iresult != NULL){
+      if(iresult != NULL){    
         send(sockfd, outbuf, strlen(outbuf), 0);
       }
       
-    }
+    }  
   }
+  // buf[byte_count] = '\0';
+  // if(command[0] == 'f'){
+  //   printf("ASSIGNMENT: %s %8.8g %8.8g\n", command, f1, f2);
+  //   printf("%s my result=(%8.8g)", buf, fresult);
+  // }
+  // else{
+  //   printf("ASSIGNMENT: %s %d %d\n", command, i1, i2);
+  //   printf("%s my result=(%d)\n", buf, iresult);
+  // }
    
 }
